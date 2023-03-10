@@ -3,27 +3,227 @@
  */
 export type DisplayStyle = "rich" | "medium" | "short";
 /**
+ * The set of available colors for the terminal foreground/background.
+ */
+export type Color = "black" | "blue" | "green" | "red" | "cyan" | "magenta" | "yellow" | "white";
+/**
+ * A color specification.
+ */
+export interface ColorSpec {
+    /**
+     * The foreground color.
+     */
+    readonly fgColor?: Color;
+    /**
+     * The background color.
+     */
+    readonly bgColor?: Color;
+    /**
+     * Whether the text is bolded or not.
+     */
+    readonly bold: boolean;
+    /**
+     * Whether the text is intense or not.
+     */
+    readonly intense: boolean;
+    /**
+     * Whether the text is underlined or not.
+     */
+    readonly underline: boolean;
+    /**
+     * Whether the text is dimmed or not.
+     */
+    readonly dimmed: boolean;
+    /**
+     * Whether the text is italic or not.
+     */
+    readonly italic: boolean;
+    /**
+     * Whether reset is enabled or not.
+     */
+    readonly reset: boolean;
+}
+/**
+ * Styles to use when rendering the diagnostic.
+ */
+export interface Styles {
+    /**
+     * The style to use when rendering bug headers. Defaults to fg:red bold
+     * intense.
+     */
+    readonly headerBug?: ColorSpec;
+    /**
+     * The style to use when rendering error headers. Defaults to fg:red bold
+     * intense.
+     */
+    readonly headerError?: ColorSpec;
+    /**
+     * The style to use when rendering warning headers. Defaults to fg:yellow bold
+     * intense.
+     */
+    readonly headerWarning?: ColorSpec;
+    /**
+     * The style to use when rendering note headers. Defaults to fg:green bold
+     * intense.
+     */
+    readonly headerNote?: ColorSpec;
+    /**
+     * The style to use when rendering help headers. Defaults to fg:cyan bold
+     * intense.
+     */
+    readonly headerHelp?: ColorSpec;
+    /**
+     * The style to use when the main diagnostic message. Defaults to bold
+     * intense.
+     */
+    readonly headerMessage?: ColorSpec;
+    /**
+     * The style to use when rendering bug labels. Defaults to fg:red.
+     */
+    readonly primaryLabelBug?: ColorSpec;
+    /**
+     * The style to use when rendering error labels. Defaults to fg:red.
+     */
+    readonly primaryLabelError?: ColorSpec;
+    /**
+     * The style to use when rendering warning labels. Defaults to fg:yellow.
+     */
+    readonly primaryLabelWarning?: ColorSpec;
+    /**
+     * The style to use when rendering note labels. Defaults to fg:green.
+     */
+    readonly primaryLabelNote?: ColorSpec;
+    /**
+     * The style to use when rendering bug headers. Defaults to fg:red bold
+     * intense.
+     */
+    readonly primaryLabelHelp?: ColorSpec;
+    /**
+     * The style to use when rendering secondary labels. Defaults fg:blue (or
+     * fg:cyan on windows).
+     */
+    readonly secondaryLabel?: ColorSpec;
+    /**
+     * The style to use when rendering the line numbers. Defaults fg:blue (or
+     * fg:cyan on windows).
+     */
+    readonly lineNumber?: ColorSpec;
+    /**
+     * The style to use when rendering the source code borders. Defaults fg:blue
+     * (or fg:cyan on windows).
+     */
+    readonly sourceBorder?: ColorSpec;
+    /**
+     * The style to use when rendering the note bullets. Defaults fg:blue (or
+     * fg:cyan on windows).
+     */
+    readonly noteBullet?: ColorSpec;
+}
+/**
+ * Characters to use when rendering the diagnostic.
+ *
+ * Use the `BOX_DRAWING_CHARS` constant to get the default characters, or
+ * `ASCII_CHARS` constant for an ASCII-only format suitable for rendering on
+ * terminals that do not support box drawing characters
+ */
+export interface Chars {
+    /**
+     * The characters to use for the top-left border of the snippet.
+     */
+    readonly snippetStart?: string;
+    /**
+     * The character to use for the left border of the source.
+     */
+    readonly sourceBorderLeft?: string;
+    /**
+     * The character to use for the left border break of the source.
+     */
+    readonly sourceBorderLeftBreak?: string;
+    /**
+     * The character to use for the note bullet.
+     */
+    readonly noteBullet?: string;
+    /**
+     * The character to use for marking a single-line primary label.
+     */
+    readonly singlePrimaryCaret?: string;
+    /**
+     * The character to use for marking a single-line secondary label.
+     */
+    readonly singleSecondaryCaret?: string;
+    /**
+     * The character to use for marking the start of a multi-line primary label.
+     */
+    readonly multiPrimaryCaretStart?: string;
+    /**
+     * The character to use for marking the end of a multi-line primary label.
+     */
+    readonly multiPrimaryCaretEnd?: string;
+    /**
+     * The character to use for marking the start of a multi-line secondary label.
+     */
+    readonly multiSecondaryCaretStart?: string;
+    /**
+     * The character to use for marking the end of a multi-line secondary label.
+     */
+    readonly multiSecondaryCaretEnd?: string;
+    /**
+     * The character to use for the top-left corner of a multi-line label.
+     */
+    readonly multiTopLeft?: string;
+    /**
+     * The character to use for the top of a multi-line label.
+     */
+    readonly multiTop?: string;
+    /**
+     * The character to use for the bottom-left corner of a multi-line label.
+     */
+    readonly multiBottomLeft?: string;
+    /**
+     * The character to use when marking the bottom of a multi-line label.
+     */
+    readonly multiBottom?: string;
+    /**
+     * The character to use for the left of a multi-line label.
+     */
+    readonly multiLeft?: string;
+    /**
+     * The character to use for the left of a pointer underneath a caret.
+     */
+    readonly pointerLeft?: string;
+}
+export declare const BOX_DRAWING_CHARS: Chars;
+export declare const ASCII_CHARS: Chars;
+/**
  * Configures how a diagnostic is rendered.
  */
 export interface Config {
     /**
      * The display style to use when rendering diagnostics. Defaults to "rich".
      */
-    displayStyle?: DisplayStyle;
+    readonly displayStyle?: DisplayStyle;
     /**
      * Column width of tabs. Defaults to: 4.
      */
-    tabWidth?: number;
+    readonly tabWidth?: number;
+    /**
+     * Styles to use when rendering the diagnostic.
+     */
+    readonly styles?: Styles;
+    /**
+     * Characters to use when rendering the diagnostic.
+     */
+    readonly chars?: Chars;
     /**
      * The minimum number of lines to be shown after the line on which a multiline
      * label begins. Defaults to: 3.
      */
-    startContextLines?: number;
+    readonly startContextLines?: number;
     /**
      * The minimum number of lines to be shown before the line on which a
      * multiline Label ends. Defaults to: 1.
      */
-    endContextLines?: number;
+    readonly endContextLines?: number;
 }
 /**
  * A severity level for diagnostic messages.
@@ -43,25 +243,25 @@ export interface Label {
     /**
      * The style of the label.
      */
-    style: LabelStyle;
+    readonly style: LabelStyle;
     /**
      * The file that we are labelling.
      */
-    fileId: string;
+    readonly fileId: string;
     /**
      * The start of the range in bytes we are going to include in the final
      * snippet.
      */
-    rangeStart: number;
+    readonly rangeStart: number;
     /**
      * The end of the range in bytes we are going to include in the final snippet.
      */
-    rangeEnd: number;
+    readonly rangeEnd: number;
     /**
      * An optional message to provide some additional information for the
      * underlined code. These should not include line breaks.
      */
-    message: string;
+    readonly message: string;
 }
 /**
  * Represents a diagnostic message that can provide information like errors and
@@ -75,11 +275,11 @@ export interface Diagnostic {
     /**
      * The overall severity of the diagnostic.
      */
-    severity: Severity;
+    readonly severity: Severity;
     /**
      * An optional code that identifies this diagnostic.
      */
-    code?: string;
+    readonly code?: string;
     /**
      * The main message associated with this diagnostic.
      *
@@ -87,18 +287,18 @@ export interface Diagnostic {
      * diagnostic display mod, the message should be specific enough to make sense
      * on its own, without additional context provided by labels and notes.
      */
-    message: string;
+    readonly message: string;
     /**
      * Source labels that describe the cause of the diagnostic. The order of the
      * labels inside the vector does not have any meaning. The labels are always
      * arranged in the order they appear in the source code.
      */
-    labels?: Label[];
+    readonly labels?: Label[];
     /**
      * Notes that are associated with the primary cause of the diagnostic. These
      * can include line breaks for improved formatting.
      */
-    notes?: string[];
+    readonly notes?: string[];
 }
 /**
  * A file referenced by a diagnostic.
@@ -108,10 +308,10 @@ export interface File {
      * The name of the file. This is the same as the fileId used to identify the
      * file in the diagnostic.
      */
-    name: string;
+    readonly name: string;
     /**
      * The source code of the file.
      */
-    source: string;
+    readonly source: string;
 }
 export declare function emit(files: File[], diagnostic: Diagnostic, config: Config): Promise<string>;

@@ -1,11 +1,18 @@
+use std::collections::HashMap;
+
 use codespan_reporting::term;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use codespan_reporting::diagnostic::{Diagnostic as CodespanDiagnostic, Label as CodespanLabel};
 use codespan_reporting::files::SimpleFiles;
-use codespan_reporting::term::termcolor::{BufferWriter, ColorChoice};
-use codespan_reporting::term::Config as CodespanConfig;
+use codespan_reporting::term::termcolor::{
+    BufferWriter, Color as TermColor, ColorChoice, ColorSpec as TermColorSpec,
+};
+use codespan_reporting::term::{
+    Chars as CodespanChars, Config as CodespanConfig, DisplayStyle as CodespanDisplayStyle,
+    Styles as CodespanStyles,
+};
 
 #[wasm_bindgen(inline_js = "exports.error = function(s) { throw new Error(s) }")]
 extern "C" {
@@ -18,7 +25,7 @@ extern "C" {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub enum DisplayStyle {
+enum DisplayStyle {
     #[serde(rename = "rich")]
     Rich,
     #[serde(rename = "medium")]
@@ -27,30 +34,289 @@ pub enum DisplayStyle {
     Short,
 }
 
+impl From<DisplayStyle> for CodespanDisplayStyle {
+    fn from(display_style: DisplayStyle) -> Self {
+        match display_style {
+            DisplayStyle::Rich => CodespanDisplayStyle::Rich,
+            DisplayStyle::Medium => CodespanDisplayStyle::Medium,
+            DisplayStyle::Short => CodespanDisplayStyle::Short,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Config {
+enum Color {
+    #[serde(rename = "black")]
+    Black,
+    #[serde(rename = "blue")]
+    Blue,
+    #[serde(rename = "green")]
+    Green,
+    #[serde(rename = "red")]
+    Red,
+    #[serde(rename = "cyan")]
+    Cyan,
+    #[serde(rename = "magenta")]
+    Magenta,
+    #[serde(rename = "yellow")]
+    Yellow,
+    #[serde(rename = "white")]
+    White,
+}
+
+impl From<Color> for TermColor {
+    fn from(color: Color) -> Self {
+        match color {
+            Color::Black => TermColor::Black,
+            Color::Blue => TermColor::Blue,
+            Color::Green => TermColor::Green,
+            Color::Red => TermColor::Red,
+            Color::Cyan => TermColor::Cyan,
+            Color::Magenta => TermColor::Magenta,
+            Color::Yellow => TermColor::Yellow,
+            Color::White => TermColor::White,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ColorSpec {
+    #[serde(rename = "fgColor")]
+    fg_color: Option<Color>,
+    #[serde(rename = "bgColor")]
+    bg_color: Option<Color>,
+    bold: bool,
+    intense: bool,
+    underline: bool,
+    dimmed: bool,
+    italic: bool,
+    reset: bool,
+}
+
+impl From<ColorSpec> for TermColorSpec {
+    fn from(color_spec: ColorSpec) -> Self {
+        let mut term_color_spec = TermColorSpec::new();
+        if let Some(fg_color) = color_spec.fg_color {
+            term_color_spec.set_fg(Some(fg_color.into()));
+        }
+        if let Some(bg_color) = color_spec.bg_color {
+            term_color_spec.set_bg(Some(bg_color.into()));
+        }
+        term_color_spec.set_bold(color_spec.bold);
+        term_color_spec.set_intense(color_spec.intense);
+        term_color_spec.set_underline(color_spec.underline);
+        term_color_spec.set_dimmed(color_spec.dimmed);
+        term_color_spec.set_italic(color_spec.italic);
+        term_color_spec.set_reset(color_spec.reset);
+        term_color_spec
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Styles {
+    #[serde(rename = "headerBug")]
+    header_bug: Option<ColorSpec>,
+    #[serde(rename = "headerError")]
+    header_error: Option<ColorSpec>,
+    #[serde(rename = "headerWarning")]
+    header_warning: Option<ColorSpec>,
+    #[serde(rename = "headerNote")]
+    header_note: Option<ColorSpec>,
+    #[serde(rename = "headerHelp")]
+    header_help: Option<ColorSpec>,
+    #[serde(rename = "headerMessage")]
+    header_message: Option<ColorSpec>,
+    #[serde(rename = "primaryLabelBug")]
+    primary_label_bug: Option<ColorSpec>,
+    #[serde(rename = "primaryLabelError")]
+    primary_label_error: Option<ColorSpec>,
+    #[serde(rename = "primaryLabelWarning")]
+    primary_label_warning: Option<ColorSpec>,
+    #[serde(rename = "primaryLabelNote")]
+    primary_label_note: Option<ColorSpec>,
+    #[serde(rename = "primaryLabelHelp")]
+    primary_label_help: Option<ColorSpec>,
+    #[serde(rename = "secondaryLabel")]
+    secondary_label: Option<ColorSpec>,
+    #[serde(rename = "lineNumber")]
+    line_number: Option<ColorSpec>,
+    #[serde(rename = "sourceBorder")]
+    source_border: Option<ColorSpec>,
+    #[serde(rename = "noteBullet")]
+    note_bullet: Option<ColorSpec>,
+}
+
+impl From<Styles> for CodespanStyles {
+    fn from(styles: Styles) -> Self {
+        let mut codespan_styles = CodespanStyles::default();
+        if let Some(header_bug) = styles.header_bug {
+            codespan_styles.header_bug = header_bug.into();
+        }
+        if let Some(header_error) = styles.header_error {
+            codespan_styles.header_error = header_error.into();
+        }
+        if let Some(header_warning) = styles.header_warning {
+            codespan_styles.header_warning = header_warning.into();
+        }
+        if let Some(header_note) = styles.header_note {
+            codespan_styles.header_note = header_note.into();
+        }
+        if let Some(header_help) = styles.header_help {
+            codespan_styles.header_help = header_help.into();
+        }
+        if let Some(header_message) = styles.header_message {
+            codespan_styles.header_message = header_message.into();
+        }
+        if let Some(primary_label_bug) = styles.primary_label_bug {
+            codespan_styles.primary_label_bug = primary_label_bug.into();
+        }
+        if let Some(primary_label_error) = styles.primary_label_error {
+            codespan_styles.primary_label_error = primary_label_error.into();
+        }
+        if let Some(primary_label_warning) = styles.primary_label_warning {
+            codespan_styles.primary_label_warning = primary_label_warning.into();
+        }
+        if let Some(primary_label_note) = styles.primary_label_note {
+            codespan_styles.primary_label_note = primary_label_note.into();
+        }
+        if let Some(primary_label_help) = styles.primary_label_help {
+            codespan_styles.primary_label_help = primary_label_help.into();
+        }
+        if let Some(secondary_label) = styles.secondary_label {
+            codespan_styles.secondary_label = secondary_label.into();
+        }
+        if let Some(line_number) = styles.line_number {
+            codespan_styles.line_number = line_number.into();
+        }
+        if let Some(source_border) = styles.source_border {
+            codespan_styles.source_border = source_border.into();
+        }
+        if let Some(note_bullet) = styles.note_bullet {
+            codespan_styles.note_bullet = note_bullet.into();
+        }
+        codespan_styles
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Chars {
+    #[serde(rename = "snippetStart")]
+    snippet_start: Option<String>,
+    #[serde(rename = "snippetBorderLeft")]
+    source_border_left: Option<char>,
+    #[serde(rename = "snippetBorderLeftBreak")]
+    source_border_left_break: Option<char>,
+    #[serde(rename = "noteBullet")]
+    note_bullet: Option<char>,
+    #[serde(rename = "singlePrimaryCaret")]
+    single_primary_caret: Option<char>,
+    #[serde(rename = "singleSecondaryCaret")]
+    single_secondary_caret: Option<char>,
+    #[serde(rename = "multiPrimaryCaretStart")]
+    multi_primary_caret_start: Option<char>,
+    #[serde(rename = "multiPrimaryCaretEnd")]
+    multi_primary_caret_end: Option<char>,
+    #[serde(rename = "multiSecondaryCaretStart")]
+    multi_secondary_caret_start: Option<char>,
+    #[serde(rename = "multiSecondaryCaretEnd")]
+    multi_secondary_caret_end: Option<char>,
+    #[serde(rename = "multiTopLeft")]
+    multi_top_left: Option<char>,
+    #[serde(rename = "multiTop")]
+    multi_top: Option<char>,
+    #[serde(rename = "multiBottomLeft")]
+    multi_bottom_left: Option<char>,
+    #[serde(rename = "multiBottom")]
+    multi_bottom: Option<char>,
+    #[serde(rename = "multiLeft")]
+    multi_left: Option<char>,
+    #[serde(rename = "pointerLeft")]
+    pointer_left: Option<char>,
+}
+
+impl From<Chars> for CodespanChars {
+    fn from(chars: Chars) -> Self {
+        let mut codespan_chars = CodespanChars::default();
+        if let Some(snippet_start) = chars.snippet_start {
+            codespan_chars.snippet_start = snippet_start;
+        }
+        if let Some(source_border_left) = chars.source_border_left {
+            codespan_chars.source_border_left = source_border_left;
+        }
+        if let Some(source_border_left_break) = chars.source_border_left_break {
+            codespan_chars.source_border_left_break = source_border_left_break;
+        }
+        if let Some(note_bullet) = chars.note_bullet {
+            codespan_chars.note_bullet = note_bullet;
+        }
+        if let Some(single_primary_caret) = chars.single_primary_caret {
+            codespan_chars.single_primary_caret = single_primary_caret;
+        }
+        if let Some(single_secondary_caret) = chars.single_secondary_caret {
+            codespan_chars.single_secondary_caret = single_secondary_caret;
+        }
+        if let Some(multi_primary_caret_start) = chars.multi_primary_caret_start {
+            codespan_chars.multi_primary_caret_start = multi_primary_caret_start;
+        }
+        if let Some(multi_primary_caret_end) = chars.multi_primary_caret_end {
+            codespan_chars.multi_primary_caret_end = multi_primary_caret_end;
+        }
+        if let Some(multi_secondary_caret_start) = chars.multi_secondary_caret_start {
+            codespan_chars.multi_secondary_caret_start = multi_secondary_caret_start;
+        }
+        if let Some(multi_secondary_caret_end) = chars.multi_secondary_caret_end {
+            codespan_chars.multi_secondary_caret_end = multi_secondary_caret_end;
+        }
+        if let Some(multi_top_left) = chars.multi_top_left {
+            codespan_chars.multi_top_left = multi_top_left;
+        }
+        if let Some(multi_top) = chars.multi_top {
+            codespan_chars.multi_top = multi_top;
+        }
+        if let Some(multi_bottom_left) = chars.multi_bottom_left {
+            codespan_chars.multi_bottom_left = multi_bottom_left;
+        }
+        if let Some(multi_bottom) = chars.multi_bottom {
+            codespan_chars.multi_bottom = multi_bottom;
+        }
+        if let Some(multi_left) = chars.multi_left {
+            codespan_chars.multi_left = multi_left;
+        }
+        if let Some(pointer_left) = chars.pointer_left {
+            codespan_chars.pointer_left = pointer_left;
+        }
+        codespan_chars
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
     #[serde(rename = "displayStyle")]
-    pub display_style: Option<DisplayStyle>,
+    display_style: Option<DisplayStyle>,
     #[serde(rename = "tabWidth")]
-    pub tab_width: Option<usize>,
+    tab_width: Option<usize>,
+    styles: Option<Styles>,
+    chars: Option<Chars>,
     #[serde(rename = "startContextLines")]
-    pub start_context_lines: Option<usize>,
+    start_context_lines: Option<usize>,
     #[serde(rename = "endContextLines")]
-    pub end_context_lines: Option<usize>,
+    end_context_lines: Option<usize>,
 }
 
 impl From<Config> for CodespanConfig {
     fn from(config: Config) -> Self {
         let mut term_config = codespan_reporting::term::Config::default();
         if let Some(display_style) = config.display_style {
-            term_config.display_style = match display_style {
-                DisplayStyle::Rich => codespan_reporting::term::DisplayStyle::Rich,
-                DisplayStyle::Medium => codespan_reporting::term::DisplayStyle::Medium,
-                DisplayStyle::Short => codespan_reporting::term::DisplayStyle::Short,
-            };
+            term_config.display_style = display_style.into();
         }
         if let Some(tab_width) = config.tab_width {
             term_config.tab_width = tab_width;
+        }
+        if let Some(styles) = config.styles {
+            term_config.styles = styles.into();
+        }
+        if let Some(chars) = config.chars {
+            term_config.chars = chars.into();
         }
         if let Some(start_context_lines) = config.start_context_lines {
             term_config.start_context_lines = start_context_lines;
@@ -63,7 +329,7 @@ impl From<Config> for CodespanConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub enum Severity {
+enum Severity {
     #[serde(rename = "bug")]
     Bug,
     #[serde(rename = "error")]
@@ -77,7 +343,7 @@ pub enum Severity {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub enum LabelStyle {
+enum LabelStyle {
     #[serde(rename = "primary")]
     Primary,
     #[serde(rename = "secondary")]
@@ -85,29 +351,29 @@ pub enum LabelStyle {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Label {
-    pub style: LabelStyle,
+struct Label {
+    style: LabelStyle,
     #[serde(rename = "fileId")]
-    pub file_id: String,
+    file_id: String,
     #[serde(rename = "rangeStart")]
-    pub range_start: usize,
+    range_start: usize,
     #[serde(rename = "rangeEnd")]
-    pub range_end: usize,
-    pub message: String,
+    range_end: usize,
+    message: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Diagnostic {
-    pub severity: Severity,
-    pub code: Option<String>,
-    pub message: String,
+struct Diagnostic {
+    severity: Severity,
+    code: Option<String>,
+    message: String,
     #[serde(default = "Vec::new")]
-    pub labels: Vec<Label>,
+    labels: Vec<Label>,
     #[serde(default = "Vec::new")]
-    pub notes: Vec<String>,
+    notes: Vec<String>,
 }
 
-impl From<Diagnostic> for CodespanDiagnostic<usize> {
+impl From<Diagnostic> for CodespanDiagnostic<String> {
     fn from(diagnostic: Diagnostic) -> Self {
         let mut codespan_diagnostic = match diagnostic.severity {
             Severity::Bug => CodespanDiagnostic::bug(),
@@ -126,13 +392,11 @@ impl From<Diagnostic> for CodespanDiagnostic<usize> {
                 .map(|label| {
                     let mut codespan_label = match label.style {
                         LabelStyle::Primary => CodespanLabel::primary(
-                            // label.file_id,
-                            0,
+                            label.file_id,
                             label.range_start..label.range_end,
                         ),
                         LabelStyle::Secondary => CodespanLabel::secondary(
-                            // label.file_id,
-                            0,
+                            label.file_id,
                             label.range_start..label.range_end,
                         ),
                     };
@@ -146,10 +410,56 @@ impl From<Diagnostic> for CodespanDiagnostic<usize> {
     }
 }
 
+fn convert_diagnostic(
+    diagnostic: Diagnostic,
+    handle_map: &HashMap<String, usize>,
+) -> CodespanDiagnostic<usize> {
+    let mut codespan_diagnostic = match diagnostic.severity {
+        Severity::Bug => CodespanDiagnostic::bug(),
+        Severity::Error => CodespanDiagnostic::error(),
+        Severity::Warning => CodespanDiagnostic::warning(),
+        Severity::Note => CodespanDiagnostic::note(),
+        Severity::Help => CodespanDiagnostic::help(),
+    };
+    if let Some(code) = diagnostic.code {
+        codespan_diagnostic = codespan_diagnostic.with_code(code);
+    }
+    codespan_diagnostic = codespan_diagnostic.with_labels(
+        diagnostic
+            .labels
+            .into_iter()
+            .filter_map(|label| {
+                let file_id = match handle_map.get(&label.file_id) {
+                    Some(file_id) => *file_id,
+                    None => {
+                        error(&format!(
+                            "File ID \"{}\" is not one of the included files",
+                            label.file_id
+                        ));
+                        return None;
+                    }
+                };
+                let mut codespan_label = match label.style {
+                    LabelStyle::Primary => {
+                        CodespanLabel::primary(file_id, label.range_start..label.range_end)
+                    }
+                    LabelStyle::Secondary => {
+                        CodespanLabel::secondary(file_id, label.range_start..label.range_end)
+                    }
+                };
+                codespan_label = codespan_label.with_message(label.message);
+                Some(codespan_label)
+            })
+            .collect(),
+    );
+    codespan_diagnostic = codespan_diagnostic.with_notes(diagnostic.notes);
+    codespan_diagnostic
+}
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct File {
-    pub name: String,
-    pub source: String,
+struct File {
+    name: String,
+    source: String,
 }
 
 #[wasm_bindgen]
@@ -164,8 +474,10 @@ pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
     debug(&format!("files: {:?}", files));
 
     let mut file_db = SimpleFiles::new();
+    let mut handle_map = HashMap::new();
     for file in files {
-        file_db.add(file.name, file.source);
+        let handle = file_db.add(file.name.clone(), file.source);
+        handle_map.insert(file.name, handle);
     }
 
     let diagnostic: Diagnostic = match serde_wasm_bindgen::from_value(diagnostic) {
@@ -176,7 +488,7 @@ pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
         }
     };
     debug(&format!("diagnostic: {:?}", diagnostic));
-    let diagnostic: CodespanDiagnostic<usize> = diagnostic.into();
+    let diagnostic: CodespanDiagnostic<usize> = convert_diagnostic(diagnostic, &handle_map);
 
     let config: Config = match serde_wasm_bindgen::from_value(config) {
         Ok(config) => config,
