@@ -96,8 +96,10 @@ pub struct Diagnostic {
     pub severity: Severity,
     pub code: Option<String>,
     pub message: String,
-    pub labels: Option<Vec<Label>>,
-    pub notes: Option<Vec<String>>,
+    #[serde(default = "Vec::new")]
+    pub labels: Vec<Label>,
+    #[serde(default = "Vec::new")]
+    pub notes: Vec<String>,
 }
 
 impl From<Diagnostic> for CodespanDiagnostic<usize> {
@@ -112,32 +114,29 @@ impl From<Diagnostic> for CodespanDiagnostic<usize> {
         if let Some(code) = diagnostic.code {
             codespan_diagnostic = codespan_diagnostic.with_code(code);
         }
-        if let Some(labels) = diagnostic.labels {
-            codespan_diagnostic = codespan_diagnostic.with_labels(
-                labels
-                    .into_iter()
-                    .map(|label| {
-                        let mut codespan_label = match label.style {
-                            LabelStyle::Primary => CodespanLabel::primary(
-                                // label.file_id,
-                                0,
-                                label.range_start..label.range_end,
-                            ),
-                            LabelStyle::Secondary => CodespanLabel::secondary(
-                                // label.file_id,
-                                0,
-                                label.range_start..label.range_end,
-                            ),
-                        };
-                        codespan_label = codespan_label.with_message(label.message);
-                        codespan_label
-                    })
-                    .collect(),
-            );
-        }
-        if let Some(notes) = diagnostic.notes {
-            codespan_diagnostic = codespan_diagnostic.with_notes(notes);
-        }
+        codespan_diagnostic = codespan_diagnostic.with_labels(
+            diagnostic
+                .labels
+                .into_iter()
+                .map(|label| {
+                    let mut codespan_label = match label.style {
+                        LabelStyle::Primary => CodespanLabel::primary(
+                            // label.file_id,
+                            0,
+                            label.range_start..label.range_end,
+                        ),
+                        LabelStyle::Secondary => CodespanLabel::secondary(
+                            // label.file_id,
+                            0,
+                            label.range_start..label.range_end,
+                        ),
+                    };
+                    codespan_label = codespan_label.with_message(label.message);
+                    codespan_label
+                })
+                .collect(),
+        );
+        codespan_diagnostic = codespan_diagnostic.with_notes(diagnostic.notes);
         codespan_diagnostic
     }
 }
