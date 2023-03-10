@@ -13,8 +13,17 @@
     "type": "git",
     "url": "git+https://github.com/Chriscbr/codespan-wasm"
   },
+  "author": "Chris Rybicki <crybicki98@gmail.com>",
+  "keywords": [
+    "wasm",
+    "error",
+    "diagnostic",
+    "codespan",
+    "reporting"
+  ],
+  "license": "MIT",
   "scripts": {
-    "build": "wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore && rm pkg/package.json && tsc -b",
+    "build": "wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore && rm pkg/package.json && rm pkg/README.md && tsc -b",
     "package": "npm pack"
   },
   "dependencies": {

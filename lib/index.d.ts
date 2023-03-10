@@ -314,4 +314,7 @@ export interface File {
      */
     readonly source: string;
 }
+/**
+ * Emit a diagnostic using the given files, context, and config.
+ */
 export declare function emit(files: File[], diagnostic: Diagnostic, config: Config): Promise<string>;

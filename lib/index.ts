@@ -363,6 +363,9 @@ export interface File {
 
 const codespan_bindings = import("../pkg");
 
+/**
+ * Emit a diagnostic using the given files, context, and config.
+ */
 export async function emit(
   files: File[],
   diagnostic: Diagnostic,
