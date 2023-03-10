@@ -3,8 +3,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
+// TODO: set up webpack to also bundle TypeScript for us? ¯\_(ツ)_/¯
+
 module.exports = {
-    entry: './index.js',
+    entry: './lib/index.js',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'index.js',

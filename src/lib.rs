@@ -1,4 +1,5 @@
 use codespan_reporting::term;
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use codespan_reporting::diagnostic::{Diagnostic, Label};
@@ -7,16 +8,57 @@ use codespan_reporting::term::termcolor::{BufferWriter, ColorChoice};
 
 #[wasm_bindgen]
 extern "C" {
-    fn alert(s: &str);
-
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Config {
+    #[serde(rename = "displayStyle")]
+    pub display_style: Option<DisplayStyle>,
+    #[serde(rename = "tabWidth")]
+    pub tab_width: Option<usize>,
+    #[serde(rename = "startContextLines")]
+    pub start_context_lines: Option<usize>,
+    #[serde(rename = "endContextLines")]
+    pub end_context_lines: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum DisplayStyle {
+    #[serde(rename = "rich")]
+    Rich,
+    #[serde(rename = "medium")]
+    Medium,
+    #[serde(rename = "short")]
+    Short,
+}
+
+impl From<Config> for codespan_reporting::term::Config {
+    fn from(config: Config) -> Self {
+        let mut term_config = codespan_reporting::term::Config::default();
+        if let Some(display_style) = config.display_style {
+            term_config.display_style = match display_style {
+                DisplayStyle::Rich => codespan_reporting::term::DisplayStyle::Rich,
+                DisplayStyle::Medium => codespan_reporting::term::DisplayStyle::Medium,
+                DisplayStyle::Short => codespan_reporting::term::DisplayStyle::Short,
+            };
+        }
+        if let Some(tab_width) = config.tab_width {
+            term_config.tab_width = tab_width;
+        }
+        if let Some(start_context_lines) = config.start_context_lines {
+            term_config.start_context_lines = start_context_lines;
+        }
+        if let Some(end_context_lines) = config.end_context_lines {
+            term_config.end_context_lines = end_context_lines;
+        }
+        term_config
+    }
+}
+
 #[wasm_bindgen]
-pub fn greet(name: &str) -> String {
+pub fn emit(code: &str, config: JsValue) -> String {
     // `files::SimpleFile` and `files::SimpleFiles` help you get up and running with
     // `codespan-reporting` quickly! More complicated use cases can be supported
     // by creating custom implementations of the `files::Files` trait.
@@ -73,16 +115,22 @@ pub fn greet(name: &str) -> String {
         ",
         )]);
 
-    // We now set up the writer and configuration, and then finally render the
-    // diagnostic to standard error.
+    let config: Config = match serde_wasm_bindgen::from_value(config) {
+        Ok(config) => config,
+        Err(err) => {
+            log(&format!("Error: {}", err));
+            return String::from("Error");
+        }
+    };
+    log(&format!("config: {:?}", config));
 
     let writer = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
     let mut buffer = writer.buffer();
-    let config = codespan_reporting::term::Config::default();
+    let config = config.into();
 
     term::emit(&mut buffer, &config, &files, &diagnostic).unwrap();
 
-    let stuff = String::from_utf8_lossy(buffer.as_slice());
+    let result = String::from_utf8_lossy(buffer.as_slice());
 
-    stuff.to_string()
+    result.to_string()
 }
