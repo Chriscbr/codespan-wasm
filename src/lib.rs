@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 use codespan_reporting::diagnostic::{Diagnostic as CodespanDiagnostic, Label as CodespanLabel};
 use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::termcolor::{BufferWriter, ColorChoice};
+use codespan_reporting::term::Config as CodespanConfig;
 
 #[wasm_bindgen]
 extern "C" {
@@ -34,7 +35,7 @@ pub struct Config {
     pub end_context_lines: Option<usize>,
 }
 
-impl From<Config> for codespan_reporting::term::Config {
+impl From<Config> for CodespanConfig {
     fn from(config: Config) -> Self {
         let mut term_config = codespan_reporting::term::Config::default();
         if let Some(display_style) = config.display_style {
@@ -141,41 +142,27 @@ impl From<Diagnostic> for CodespanDiagnostic<usize> {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct File {
+    pub name: String,
+    pub source: String,
+}
+
 #[wasm_bindgen]
-pub fn emit(code: &str, diagnostic: JsValue, config: JsValue) -> String {
-    // `files::SimpleFile` and `files::SimpleFiles` help you get up and running with
-    // `codespan-reporting` quickly! More complicated use cases can be supported
-    // by creating custom implementations of the `files::Files` trait.
+pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
+    let files: Vec<File> = match serde_wasm_bindgen::from_value(files) {
+        Ok(files) => files,
+        Err(err) => {
+            log(&format!("Error: {}", err));
+            return String::from("Error");
+        }
+    };
+    log(&format!("files: {:?}", files));
 
-    let mut files = SimpleFiles::new();
-
-    let file_id = files.add(
-        "FizzBuzz.fun",
-        unindent::unindent(
-            r#"
-            module FizzBuzz where
-
-            fizz₁ : Nat → String
-            fizz₁ num = case (mod num 5) (mod num 3) of
-                0 0 => "FizzBuzz"
-                0 _ => "Fizz"
-                _ 0 => "Buzz"
-                _ _ => num
-
-            fizz₂ : Nat → String
-            fizz₂ num =
-                case (mod num 5) (mod num 3) of
-                    0 0 => "FizzBuzz"
-                    0 _ => "Fizz"
-                    _ 0 => "Buzz"
-                    _ _ => num
-        "#,
-        ),
-    );
-
-    // We normally recommend creating a custom diagnostic data type for your
-    // application, and then converting that to `codespan-reporting`'s diagnostic
-    // type, but for the sake of this example we construct it directly.
+    let mut file_db = SimpleFiles::new();
+    for file in files {
+        file_db.add(file.name, file.source);
+    }
 
     let diagnostic: Diagnostic = match serde_wasm_bindgen::from_value(diagnostic) {
         Ok(diagnostic) => diagnostic,
@@ -195,11 +182,12 @@ pub fn emit(code: &str, diagnostic: JsValue, config: JsValue) -> String {
         }
     };
     log(&format!("config: {:?}", config));
+    let config: CodespanConfig = config.into();
 
     let writer = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
     let mut buffer = writer.buffer();
 
-    term::emit(&mut buffer, &config.into(), &files, &diagnostic).unwrap();
+    term::emit(&mut buffer, &config, &file_db, &diagnostic).unwrap();
 
     let result = String::from_utf8_lossy(buffer.as_slice());
 

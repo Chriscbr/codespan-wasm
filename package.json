@@ -1,9 +1,19 @@
 {
+  "name": "codespan-wasm",
+  "version": "0.1.0",
+  "description": "WebAssembly bindings for the Rust codespan-reporting crate",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "pkg"
+  ],
   "scripts": {
     "build:lib": "tsc -b",
     "build:wasm": "wasm-pack build --target web --out-name wasm --out-dir ./pkg",
     "build:web": "webpack",
-    "serve": "webpack serve"
+    "serve": "webpack serve",
+    "package": "npm pack"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.6.0",

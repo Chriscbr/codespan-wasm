@@ -68,6 +68,14 @@ export interface Label {
   message: string;
 }
 
+/**
+ * Represents a diagnostic message that can provide information like errors and
+ * warnings to the user.
+ *
+ * The position of a Diagnostic is considered to be the position of the Label
+ * that has the earliest starting position and has the highest style which
+ * appears in all the labels of the diagnostic.
+ */
 export interface Diagnostic {
   /**
    * The overall severity of the diagnostic.
@@ -98,71 +106,29 @@ export interface Diagnostic {
   notes?: string[];
 }
 
+/**
+ * A file referenced by a diagnostic.
+ */
+export interface File {
+  /**
+   * The name of the file. This is the same as the fileId used to identify the
+   * file in the diagnostic.
+   */
+  name: string;
+  /**
+   * The source code of the file.
+   */
+  source: string;
+}
+
+const codespan_bindings = import("../pkg");
+
 export async function emit(
-  code: string,
+  files: File[],
   diagnostic: Diagnostic,
   config: Config,
 ): Promise<string> {
-  return import("../pkg").then((mod) => {
-    return mod.emit(code, diagnostic, config);
+  return codespan_bindings.then((mod) => {
+    return mod.emit(files, diagnostic, config);
   });
 }
-
-emit("let x = 1 + 1;", {
-  severity: "error",
-  message: "`case` clauses have incompatible types",
-  code: "E0308",
-  labels: [
-    {
-      style: "primary",
-      fileId: "0",
-      rangeStart: 328,
-      rangeEnd: 331,
-      message: "expected `String`, found `Nat`",
-    },
-    {
-      style: "secondary",
-      fileId: "0",
-      rangeStart: 211,
-      rangeEnd: 331,
-      message: "`case` clauses have incompatible types",
-    },
-    {
-      style: "secondary",
-      fileId: "0",
-      rangeStart: 258,
-      rangeEnd: 268,
-      message: "this is found to be of type `String`",
-    },
-    {
-      style: "secondary",
-      fileId: "0",
-      rangeStart: 284,
-      rangeEnd: 290,
-      message: "this is found to be of type `String`",
-    },
-    {
-      style: "secondary",
-      fileId: "0",
-      rangeStart: 306,
-      rangeEnd: 312,
-      message: "this is found to be of type `String`",
-    },
-    {
-      style: "secondary",
-      fileId: "0",
-      rangeStart: 186,
-      rangeEnd: 182,
-      message: "expected type `String` found here",
-    },
-  ],
-  notes: [`expected type \`String\`
-    found type \`Nat\``],
-},
-{
-  displayStyle: "rich",
-}).then((result) => {
-  console.log(result);
-}).catch((err) => {
-  console.error(err);
-});
