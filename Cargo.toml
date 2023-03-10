@@ -8,3 +8,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.83"
+codespan-reporting = "0.11.1"
+unindent = "0.2.1"

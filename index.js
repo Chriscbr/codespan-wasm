@@ -4,5 +4,8 @@
 const rust = import('./pkg');
 
 rust
-  .then(m => m.greet('World!'))
+  .then(m => {
+    let x = m.greet('World!');
+    console.log(JSON.stringify(x));
+  })
   .catch(console.error);
