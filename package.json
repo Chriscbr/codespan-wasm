@@ -10,7 +10,7 @@
     "pkg"
   ],
   "scripts": {
-    "build": "tsc -b && wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore && rm pkg/package.json",
+    "build": "wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore && rm pkg/package.json && tsc -b",
     "package": "npm pack"
   },
   "devDependencies": {
