@@ -122,8 +122,8 @@ export interface Styles {
 /**
  * Characters to use when rendering the diagnostic.
  *
- * Use the `BOX_DRAWING_CHARS` constant to get the default characters, or
- * `ASCII_CHARS` constant for an ASCII-only format suitable for rendering on
+ * Use the `CHARS_BOX_DRAWING` constant to get the default characters, or
+ * `CHARS_ASCII` constant for an ASCII-only format suitable for rendering on
  * terminals that do not support box drawing characters
  */
 export interface Chars {
@@ -192,8 +192,8 @@ export interface Chars {
      */
     readonly pointerLeft?: string;
 }
-export declare const BOX_DRAWING_CHARS: Chars;
-export declare const ASCII_CHARS: Chars;
+export declare const CHARS_BOX_DRAWING: Chars;
+export declare const CHARS_ASCII: Chars;
 /**
  * Configures how a diagnostic is rendered.
  */

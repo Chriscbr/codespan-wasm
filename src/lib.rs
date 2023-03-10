@@ -82,8 +82,10 @@ impl From<Color> for TermColor {
 #[derive(Serialize, Deserialize, Debug)]
 struct ColorSpec {
     #[serde(rename = "fgColor")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     fg_color: Option<Color>,
     #[serde(rename = "bgColor")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     bg_color: Option<Color>,
     bold: bool,
     intense: bool,
@@ -115,34 +117,49 @@ impl From<ColorSpec> for TermColorSpec {
 #[derive(Serialize, Deserialize, Debug)]
 struct Styles {
     #[serde(rename = "headerBug")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     header_bug: Option<ColorSpec>,
     #[serde(rename = "headerError")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     header_error: Option<ColorSpec>,
     #[serde(rename = "headerWarning")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     header_warning: Option<ColorSpec>,
     #[serde(rename = "headerNote")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     header_note: Option<ColorSpec>,
     #[serde(rename = "headerHelp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     header_help: Option<ColorSpec>,
     #[serde(rename = "headerMessage")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     header_message: Option<ColorSpec>,
     #[serde(rename = "primaryLabelBug")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     primary_label_bug: Option<ColorSpec>,
     #[serde(rename = "primaryLabelError")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     primary_label_error: Option<ColorSpec>,
     #[serde(rename = "primaryLabelWarning")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     primary_label_warning: Option<ColorSpec>,
     #[serde(rename = "primaryLabelNote")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     primary_label_note: Option<ColorSpec>,
     #[serde(rename = "primaryLabelHelp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     primary_label_help: Option<ColorSpec>,
     #[serde(rename = "secondaryLabel")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     secondary_label: Option<ColorSpec>,
     #[serde(rename = "lineNumber")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     line_number: Option<ColorSpec>,
     #[serde(rename = "sourceBorder")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     source_border: Option<ColorSpec>,
     #[serde(rename = "noteBullet")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     note_bullet: Option<ColorSpec>,
 }
 
@@ -201,36 +218,52 @@ impl From<Styles> for CodespanStyles {
 #[derive(Serialize, Deserialize, Debug)]
 struct Chars {
     #[serde(rename = "snippetStart")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     snippet_start: Option<String>,
     #[serde(rename = "snippetBorderLeft")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     source_border_left: Option<char>,
     #[serde(rename = "snippetBorderLeftBreak")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     source_border_left_break: Option<char>,
     #[serde(rename = "noteBullet")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     note_bullet: Option<char>,
     #[serde(rename = "singlePrimaryCaret")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     single_primary_caret: Option<char>,
     #[serde(rename = "singleSecondaryCaret")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     single_secondary_caret: Option<char>,
     #[serde(rename = "multiPrimaryCaretStart")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_primary_caret_start: Option<char>,
     #[serde(rename = "multiPrimaryCaretEnd")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_primary_caret_end: Option<char>,
     #[serde(rename = "multiSecondaryCaretStart")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_secondary_caret_start: Option<char>,
     #[serde(rename = "multiSecondaryCaretEnd")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_secondary_caret_end: Option<char>,
     #[serde(rename = "multiTopLeft")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_top_left: Option<char>,
     #[serde(rename = "multiTop")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_top: Option<char>,
     #[serde(rename = "multiBottomLeft")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_bottom_left: Option<char>,
     #[serde(rename = "multiBottom")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_bottom: Option<char>,
     #[serde(rename = "multiLeft")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     multi_left: Option<char>,
     #[serde(rename = "pointerLeft")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pointer_left: Option<char>,
 }
 
@@ -292,14 +325,20 @@ impl From<Chars> for CodespanChars {
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {
     #[serde(rename = "displayStyle")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     display_style: Option<DisplayStyle>,
     #[serde(rename = "tabWidth")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     tab_width: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     styles: Option<Styles>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     chars: Option<Chars>,
     #[serde(rename = "startContextLines")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_context_lines: Option<usize>,
     #[serde(rename = "endContextLines")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     end_context_lines: Option<usize>,
 }
 
@@ -365,6 +404,7 @@ struct Label {
 #[derive(Serialize, Deserialize, Debug)]
 struct Diagnostic {
     severity: Severity,
+    #[serde(skip_serializing_if = "Option::is_none")]
     code: Option<String>,
     message: String,
     #[serde(default = "Vec::new")]
