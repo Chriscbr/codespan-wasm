@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build:lib": "tsc -b",
-    "build:wasm": "wasm-pack build --target web --out-name wasm --out-dir ./pkg",
+    "build:wasm": "wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore",
     "build:web": "webpack",
     "serve": "webpack serve",
     "package": "npm pack"
