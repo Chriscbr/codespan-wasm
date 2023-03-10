@@ -2,7 +2,7 @@ use codespan_reporting::term;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-use codespan_reporting::diagnostic::{Diagnostic, Label};
+use codespan_reporting::diagnostic::{Diagnostic as CodespanDiagnostic, Label as CodespanLabel};
 use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::termcolor::{BufferWriter, ColorChoice};
 
@@ -10,6 +10,16 @@ use codespan_reporting::term::termcolor::{BufferWriter, ColorChoice};
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum DisplayStyle {
+    #[serde(rename = "rich")]
+    Rich,
+    #[serde(rename = "medium")]
+    Medium,
+    #[serde(rename = "short")]
+    Short,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -22,16 +32,6 @@ pub struct Config {
     pub start_context_lines: Option<usize>,
     #[serde(rename = "endContextLines")]
     pub end_context_lines: Option<usize>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum DisplayStyle {
-    #[serde(rename = "rich")]
-    Rich,
-    #[serde(rename = "medium")]
-    Medium,
-    #[serde(rename = "short")]
-    Short,
 }
 
 impl From<Config> for codespan_reporting::term::Config {
@@ -57,8 +57,93 @@ impl From<Config> for codespan_reporting::term::Config {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Severity {
+    #[serde(rename = "bug")]
+    Bug,
+    #[serde(rename = "error")]
+    Error,
+    #[serde(rename = "warning")]
+    Warning,
+    #[serde(rename = "note")]
+    Note,
+    #[serde(rename = "help")]
+    Help,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum LabelStyle {
+    #[serde(rename = "primary")]
+    Primary,
+    #[serde(rename = "secondary")]
+    Secondary,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Label {
+    pub style: LabelStyle,
+    #[serde(rename = "fileId")]
+    pub file_id: String,
+    #[serde(rename = "rangeStart")]
+    pub range_start: usize,
+    #[serde(rename = "rangeEnd")]
+    pub range_end: usize,
+    pub message: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Diagnostic {
+    pub severity: Severity,
+    pub code: Option<String>,
+    pub message: String,
+    pub labels: Option<Vec<Label>>,
+    pub notes: Option<Vec<String>>,
+}
+
+impl From<Diagnostic> for CodespanDiagnostic<usize> {
+    fn from(diagnostic: Diagnostic) -> Self {
+        let mut codespan_diagnostic = match diagnostic.severity {
+            Severity::Bug => CodespanDiagnostic::bug(),
+            Severity::Error => CodespanDiagnostic::error(),
+            Severity::Warning => CodespanDiagnostic::warning(),
+            Severity::Note => CodespanDiagnostic::note(),
+            Severity::Help => CodespanDiagnostic::help(),
+        };
+        if let Some(code) = diagnostic.code {
+            codespan_diagnostic = codespan_diagnostic.with_code(code);
+        }
+        if let Some(labels) = diagnostic.labels {
+            codespan_diagnostic = codespan_diagnostic.with_labels(
+                labels
+                    .into_iter()
+                    .map(|label| {
+                        let mut codespan_label = match label.style {
+                            LabelStyle::Primary => CodespanLabel::primary(
+                                // label.file_id,
+                                0,
+                                label.range_start..label.range_end,
+                            ),
+                            LabelStyle::Secondary => CodespanLabel::secondary(
+                                // label.file_id,
+                                0,
+                                label.range_start..label.range_end,
+                            ),
+                        };
+                        codespan_label = codespan_label.with_message(label.message);
+                        codespan_label
+                    })
+                    .collect(),
+            );
+        }
+        if let Some(notes) = diagnostic.notes {
+            codespan_diagnostic = codespan_diagnostic.with_notes(notes);
+        }
+        codespan_diagnostic
+    }
+}
+
 #[wasm_bindgen]
-pub fn emit(code: &str, config: JsValue) -> String {
+pub fn emit(code: &str, diagnostic: JsValue, config: JsValue) -> String {
     // `files::SimpleFile` and `files::SimpleFiles` help you get up and running with
     // `codespan-reporting` quickly! More complicated use cases can be supported
     // by creating custom implementations of the `files::Files` trait.
@@ -93,27 +178,15 @@ pub fn emit(code: &str, config: JsValue) -> String {
     // application, and then converting that to `codespan-reporting`'s diagnostic
     // type, but for the sake of this example we construct it directly.
 
-    let diagnostic = Diagnostic::error()
-        .with_message("`case` clauses have incompatible types")
-        .with_code("E0308")
-        .with_labels(vec![
-            Label::primary(file_id, 328..331).with_message("expected `String`, found `Nat`"),
-            Label::secondary(file_id, 211..331)
-                .with_message("`case` clauses have incompatible types"),
-            Label::secondary(file_id, 258..268)
-                .with_message("this is found to be of type `String`"),
-            Label::secondary(file_id, 284..290)
-                .with_message("this is found to be of type `String`"),
-            Label::secondary(file_id, 306..312)
-                .with_message("this is found to be of type `String`"),
-            Label::secondary(file_id, 186..192).with_message("expected type `String` found here"),
-        ])
-        .with_notes(vec![unindent::unindent(
-            "
-            expected type `String`
-                found type `Nat`
-        ",
-        )]);
+    let diagnostic: Diagnostic = match serde_wasm_bindgen::from_value(diagnostic) {
+        Ok(diagnostic) => diagnostic,
+        Err(err) => {
+            log(&format!("Error: {}", err));
+            return String::from("Error");
+        }
+    };
+    log(&format!("diagnostic: {:?}", diagnostic));
+    let diagnostic: CodespanDiagnostic<usize> = diagnostic.into();
 
     let config: Config = match serde_wasm_bindgen::from_value(config) {
         Ok(config) => config,
@@ -126,9 +199,8 @@ pub fn emit(code: &str, config: JsValue) -> String {
 
     let writer = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
     let mut buffer = writer.buffer();
-    let config = config.into();
 
-    term::emit(&mut buffer, &config, &files, &diagnostic).unwrap();
+    term::emit(&mut buffer, &config.into(), &files, &diagnostic).unwrap();
 
     let result = String::from_utf8_lossy(buffer.as_slice());
 
