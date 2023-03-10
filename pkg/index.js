@@ -1,6 +1,8 @@
 let imports = {};
 imports['__wbindgen_placeholder__'] = module.exports;
 let wasm;
+const { error } = require(String.raw`./snippets/wasm-codespan-23d53a147bc59c74/inline0.js`);
+const { debug } = require(String.raw`./snippets/wasm-codespan-23d53a147bc59c74/inline1.js`);
 const { TextDecoder, TextEncoder } = require(`util`);
 
 const heap = new Array(128).fill(undefined);
@@ -280,8 +282,12 @@ module.exports.__wbindgen_in = function(arg0, arg1) {
     return ret;
 };
 
-module.exports.__wbg_log_0d5374d1eb5b3db2 = function(arg0, arg1) {
-    console.log(getStringFromWasm0(arg0, arg1));
+module.exports.__wbg_debug_885ffd6b4c0d262b = function(arg0, arg1) {
+    debug(getStringFromWasm0(arg0, arg1));
+};
+
+module.exports.__wbg_error_c810ed5acc180ae1 = function(arg0, arg1) {
+    error(getStringFromWasm0(arg0, arg1));
 };
 
 module.exports.__wbindgen_jsval_loose_eq = function(arg0, arg1) {

@@ -7,10 +7,14 @@ use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::termcolor::{BufferWriter, ColorChoice};
 use codespan_reporting::term::Config as CodespanConfig;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inline_js = "exports.error = function(s) { throw new Error(s) }")]
 extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
+    fn error(s: &str);
+}
+
+#[wasm_bindgen(inline_js = "exports.debug = function(s) { require('debug')('codespan-wasm')(s) }")]
+extern "C" {
+    fn debug(s: &str);
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -153,11 +157,11 @@ pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
     let files: Vec<File> = match serde_wasm_bindgen::from_value(files) {
         Ok(files) => files,
         Err(err) => {
-            log(&format!("Error: {}", err));
+            error(&format!("{}", err));
             return String::from("Error");
         }
     };
-    log(&format!("files: {:?}", files));
+    debug(&format!("files: {:?}", files));
 
     let mut file_db = SimpleFiles::new();
     for file in files {
@@ -167,21 +171,21 @@ pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
     let diagnostic: Diagnostic = match serde_wasm_bindgen::from_value(diagnostic) {
         Ok(diagnostic) => diagnostic,
         Err(err) => {
-            log(&format!("Error: {}", err));
+            error(&format!("{}", err));
             return String::from("Error");
         }
     };
-    log(&format!("diagnostic: {:?}", diagnostic));
+    debug(&format!("diagnostic: {:?}", diagnostic));
     let diagnostic: CodespanDiagnostic<usize> = diagnostic.into();
 
     let config: Config = match serde_wasm_bindgen::from_value(config) {
         Ok(config) => config,
         Err(err) => {
-            log(&format!("Error: {}", err));
+            error(&format!("{}", err));
             return String::from("Error");
         }
     };
-    log(&format!("config: {:?}", config));
+    debug(&format!("config: {:?}", config));
     let config: CodespanConfig = config.into();
 
     let writer = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
