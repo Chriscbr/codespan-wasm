@@ -5,23 +5,15 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib",
+    "lib/*.js",
+    "lib/*.d.ts",
     "pkg"
   ],
   "scripts": {
-    "build:lib": "tsc -b",
-    "build:wasm": "wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore",
-    "build:web": "webpack",
-    "serve": "webpack serve",
+    "build": "tsc -b && wasm-pack build --target nodejs --out-name index --out-dir ./pkg && rm pkg/.gitignore && rm pkg/package.json",
     "package": "npm pack"
   },
   "devDependencies": {
-    "@wasm-tool/wasm-pack-plugin": "1.6.0",
-    "html-webpack-plugin": "^5.5.0",
-    "text-encoding": "^0.7.0",
-    "typescript": "^4.9.5",
-    "webpack": "^5.76.0",
-    "webpack-cli": "^5.0.1",
-    "webpack-dev-server": "^4.11.1"
+    "typescript": "^4.9.5"
   }
 }
