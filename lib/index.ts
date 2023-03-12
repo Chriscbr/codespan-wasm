@@ -366,10 +366,10 @@ const codespan_bindings = import("../pkg");
 /**
  * Emit a diagnostic using the given files, context, and config.
  */
-export async function emit(
+export async function emitDiagnostic(
   files: File[],
   diagnostic: Diagnostic,
-  config: Config,
+  config: Config = {},
 ): Promise<string> {
   return codespan_bindings.then((mod) => {
     return mod.emit(files, diagnostic, config);

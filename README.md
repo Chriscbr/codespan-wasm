@@ -7,7 +7,7 @@ An unnofficial set of Node.js bindings for [codespan-reporting](https://crates.i
 ## Usage
 
 ```ts
-emit([{
+emitDiagnostic([{
   name: "FizzBuzz.fun",
   source: `module FizzBuzz where
 

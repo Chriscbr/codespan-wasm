@@ -413,43 +413,6 @@ struct Diagnostic {
     notes: Vec<String>,
 }
 
-impl From<Diagnostic> for CodespanDiagnostic<String> {
-    fn from(diagnostic: Diagnostic) -> Self {
-        let mut codespan_diagnostic = match diagnostic.severity {
-            Severity::Bug => CodespanDiagnostic::bug(),
-            Severity::Error => CodespanDiagnostic::error(),
-            Severity::Warning => CodespanDiagnostic::warning(),
-            Severity::Note => CodespanDiagnostic::note(),
-            Severity::Help => CodespanDiagnostic::help(),
-        };
-        if let Some(code) = diagnostic.code {
-            codespan_diagnostic = codespan_diagnostic.with_code(code);
-        }
-        codespan_diagnostic = codespan_diagnostic.with_labels(
-            diagnostic
-                .labels
-                .into_iter()
-                .map(|label| {
-                    let mut codespan_label = match label.style {
-                        LabelStyle::Primary => CodespanLabel::primary(
-                            label.file_id,
-                            label.range_start..label.range_end,
-                        ),
-                        LabelStyle::Secondary => CodespanLabel::secondary(
-                            label.file_id,
-                            label.range_start..label.range_end,
-                        ),
-                    };
-                    codespan_label = codespan_label.with_message(label.message);
-                    codespan_label
-                })
-                .collect(),
-        );
-        codespan_diagnostic = codespan_diagnostic.with_notes(diagnostic.notes);
-        codespan_diagnostic
-    }
-}
-
 fn convert_diagnostic(
     diagnostic: Diagnostic,
     handle_map: &HashMap<String, usize>,
@@ -464,6 +427,7 @@ fn convert_diagnostic(
     if let Some(code) = diagnostic.code {
         codespan_diagnostic = codespan_diagnostic.with_code(code);
     }
+    codespan_diagnostic = codespan_diagnostic.with_message(diagnostic.message);
     codespan_diagnostic = codespan_diagnostic.with_labels(
         diagnostic
             .labels
