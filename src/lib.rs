@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 use codespan_reporting::diagnostic::{Diagnostic as CodespanDiagnostic, Label as CodespanLabel};
 use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::termcolor::{
-    BufferWriter, Color as TermColor, ColorChoice, ColorSpec as TermColorSpec,
+    BufferWriter, Color as TermColor, ColorChoice as TermColorChoice, ColorSpec as TermColorSpec,
 };
 use codespan_reporting::term::{
     Chars as CodespanChars, Config as CodespanConfig, DisplayStyle as CodespanDisplayStyle,
@@ -220,10 +220,10 @@ struct Chars {
     #[serde(rename = "snippetStart")]
     #[serde(skip_serializing_if = "Option::is_none")]
     snippet_start: Option<String>,
-    #[serde(rename = "snippetBorderLeft")]
+    #[serde(rename = "sourceBorderLeft")]
     #[serde(skip_serializing_if = "Option::is_none")]
     source_border_left: Option<char>,
-    #[serde(rename = "snippetBorderLeftBreak")]
+    #[serde(rename = "sourceBorderLeftBreak")]
     #[serde(skip_serializing_if = "Option::is_none")]
     source_border_left_break: Option<char>,
     #[serde(rename = "noteBullet")]
@@ -467,7 +467,12 @@ struct File {
 }
 
 #[wasm_bindgen]
-pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
+pub fn emit_diagnostic(
+    files: JsValue,
+    diagnostic: JsValue,
+    config: JsValue,
+    color_choice: bool,
+) -> String {
     let files: Vec<File> = match serde_wasm_bindgen::from_value(files) {
         Ok(files) => files,
         Err(err) => {
@@ -504,7 +509,14 @@ pub fn emit(files: JsValue, diagnostic: JsValue, config: JsValue) -> String {
     debug(&format!("config: {:?}", config));
     let config: CodespanConfig = config.into();
 
-    let writer = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
+    debug(&format!("color_choice: {:?}", color_choice));
+    let color_choice: TermColorChoice = if color_choice {
+        TermColorChoice::AlwaysAnsi
+    } else {
+        TermColorChoice::Never
+    };
+
+    let writer = BufferWriter::stderr(color_choice);
     let mut buffer = writer.buffer();
 
     term::emit(&mut buffer, &config, &file_db, &diagnostic).unwrap();

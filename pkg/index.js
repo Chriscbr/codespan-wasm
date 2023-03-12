@@ -205,12 +205,13 @@ function debugString(val) {
 * @param {any} files
 * @param {any} diagnostic
 * @param {any} config
+* @param {boolean} color_choice
 * @returns {string}
 */
-module.exports.emit = function(files, diagnostic, config) {
+module.exports.emit_diagnostic = function(files, diagnostic, config, color_choice) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        wasm.emit(retptr, addHeapObject(files), addHeapObject(diagnostic), addHeapObject(config));
+        wasm.emit_diagnostic(retptr, addHeapObject(files), addHeapObject(diagnostic), addHeapObject(config), color_choice);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         return getStringFromWasm0(r0, r1);

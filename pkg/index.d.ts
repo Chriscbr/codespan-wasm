@@ -4,6 +4,7 @@
 * @param {any} files
 * @param {any} diagnostic
 * @param {any} config
+* @param {boolean} color_choice
 * @returns {string}
 */
-export function emit(files: any, diagnostic: any, config: any): string;
+export function emit_diagnostic(files: any, diagnostic: any, config: any, color_choice: boolean): string;
