@@ -1,3 +1,5 @@
+import * as codespan_bindings from "../pkg";
+
 /**
  * The display style to use when rendering diagnostics.
  */
@@ -361,18 +363,14 @@ export interface File {
   readonly source: string;
 }
 
-const codespan_bindings = import("../pkg");
-
 /**
  * Emit a diagnostic using the given files, context, and config.
  */
-export async function emitDiagnostic(
+export function emitDiagnostic(
   files: File[],
   diagnostic: Diagnostic,
   config: Config,
   coloring: boolean,
-): Promise<string> {
-  return codespan_bindings.then((mod) => {
-    return mod.emit_diagnostic(files, diagnostic, config, coloring);
-  });
+): string {
+  return codespan_bindings.emit_diagnostic(files, diagnostic, config, coloring);
 }

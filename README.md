@@ -7,7 +7,7 @@ An unnofficial set of Node.js bindings for [codespan-reporting](https://crates.i
 ## Usage
 
 ```ts
-emitDiagnostic([{
+const diagnostic = emitDiagnostic([{
   name: "FizzBuzz.fun",
   source: `module FizzBuzz where
 
@@ -78,11 +78,8 @@ fizz₂ num =
 }, {
   displayStyle: "rich",
   chars: CHARS_ASCII,
-}).then((result) => {
-  console.log(result);
-}).catch((err) => {
-  console.error(err);
 });
+console.log(diagnostic);
 ```
 
 ## Future work

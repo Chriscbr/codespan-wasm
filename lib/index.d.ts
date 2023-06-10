@@ -317,4 +317,4 @@ export interface File {
 /**
  * Emit a diagnostic using the given files, context, and config.
  */
-export declare function emitDiagnostic(files: File[], diagnostic: Diagnostic, config: Config, coloring: boolean): Promise<string>;
+export declare function emitDiagnostic(files: File[], diagnostic: Diagnostic, config: Config, coloring: boolean): string;
