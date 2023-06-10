@@ -89,5 +89,3 @@ Add a cleaner API for emitting diagnostics, using the builder pattern.
 ## Contributing
 
 Contributions are welcome.
-
-Building the project requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/) to be installed.
