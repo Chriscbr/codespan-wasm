@@ -1,3 +1,7 @@
+# 0.4.0
+
+* Changed `emitDiagnostic` to be a synchronous function.
+
 # 0.3.0
 
 * Added required `coloring` parameter to `emitDiagnostic` function, and fixed a bug where `sourceBorderLeft` and `sourceBorderLeftBreak` could not be customized.
